@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/toaster";
 import { Navigation } from "lucide-react";
 
 const SoilData = () => {
@@ -37,6 +37,12 @@ const SoilData = () => {
     },
     cec: 12.5
   });
+  
+  // Try to get location when component mounts
+  useEffect(() => {
+    // Auto-prompt for location when the page loads
+    handleGetCurrentLocation();
+  }, []);
   
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -283,34 +289,34 @@ const SoilData = () => {
                         <div className="bg-white p-4 rounded-md border">
                           <div className="mb-2 flex justify-between">
                             <span className="text-sm font-medium">Sand</span>
-                            <span className="text-sm">{soilData.texture.sand}%</span>
+                            <span className="text-sm tabular-nums">{soilData.texture.sand}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
                             <div 
                               className="bg-yellow-400 h-2.5 rounded-full" 
-                              style={{ width: `${soilData.texture.sand}%` }}
+                              style={{ width: `${Math.min(soilData.texture.sand, 100)}%` }}
                             ></div>
                           </div>
                           
                           <div className="mb-2 flex justify-between">
                             <span className="text-sm font-medium">Silt</span>
-                            <span className="text-sm">{soilData.texture.silt}%</span>
+                            <span className="text-sm tabular-nums">{soilData.texture.silt}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
                             <div 
                               className="bg-farm-brown h-2.5 rounded-full" 
-                              style={{ width: `${soilData.texture.silt}%` }}
+                              style={{ width: `${Math.min(soilData.texture.silt, 100)}%` }}
                             ></div>
                           </div>
                           
                           <div className="mb-2 flex justify-between">
                             <span className="text-sm font-medium">Clay</span>
-                            <span className="text-sm">{soilData.texture.clay}%</span>
+                            <span className="text-sm tabular-nums">{soilData.texture.clay}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
                               className="bg-farm-primary h-2.5 rounded-full" 
-                              style={{ width: `${soilData.texture.clay}%` }}
+                              style={{ width: `${Math.min(soilData.texture.clay, 100)}%` }}
                             ></div>
                           </div>
                         </div>
@@ -327,7 +333,7 @@ const SoilData = () => {
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-farm-primary h-2.5 rounded-full" 
-                                style={{ width: `${Math.min((soilData.nutrients.nitrogen / 100) * 100, 100)}%` }}
+                                style={{ width: `${Math.min(soilData.nutrients.nitrogen, 100)}%` }}
                               ></div>
                             </div>
                           </div>
@@ -340,7 +346,7 @@ const SoilData = () => {
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-farm-secondary h-2.5 rounded-full" 
-                                style={{ width: `${Math.min((soilData.nutrients.phosphorus / 100) * 100, 100)}%` }}
+                                style={{ width: `${Math.min(soilData.nutrients.phosphorus, 100)}%` }}
                               ></div>
                             </div>
                           </div>
@@ -353,7 +359,7 @@ const SoilData = () => {
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-farm-accent h-2.5 rounded-full" 
-                                style={{ width: `${Math.min((soilData.nutrients.potassium / 100) * 100, 100)}%` }}
+                                style={{ width: `${Math.min(soilData.nutrients.potassium, 100)}%` }}
                               ></div>
                             </div>
                           </div>
