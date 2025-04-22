@@ -259,7 +259,7 @@ const SoilData = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
                             <p className="text-sm text-gray-500">Soil Type</p>
-                            <p className="text-xl font-semibold">{soilData.soilType}</p>
+                            <p className="text-xl font-semibold truncate" title={soilData.soilType}>{soilData.soilType}</p>
                           </div>
                           <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
                             <p className="text-sm text-gray-500">pH Level</p>
@@ -274,7 +274,7 @@ const SoilData = () => {
                           </div>
                           <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
                             <p className="text-sm text-gray-500">CEC</p>
-                            <p className="text-xl font-semibold">{soilData.cec} meq/100g</p>
+                            <p className="text-xl font-semibold truncate" title={`${soilData.cec} meq/100g`}>{soilData.cec} meq/100g</p>
                             <p className="text-xs mt-1">Cation Exchange Capacity</p>
                           </div>
                         </div>
@@ -322,12 +322,12 @@ const SoilData = () => {
                           <div>
                             <div className="flex justify-between mb-1">
                               <span className="text-sm font-medium">Nitrogen (N)</span>
-                              <span className="text-sm">{soilData.nutrients.nitrogen} ppm</span>
+                              <span className="text-sm tabular-nums">{soilData.nutrients.nitrogen} ppm</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-farm-primary h-2.5 rounded-full" 
-                                style={{ width: `${(soilData.nutrients.nitrogen / 100) * 100}%` }}
+                                style={{ width: `${Math.min((soilData.nutrients.nitrogen / 100) * 100, 100)}%` }}
                               ></div>
                             </div>
                           </div>
@@ -335,12 +335,12 @@ const SoilData = () => {
                           <div>
                             <div className="flex justify-between mb-1">
                               <span className="text-sm font-medium">Phosphorus (P)</span>
-                              <span className="text-sm">{soilData.nutrients.phosphorus} ppm</span>
+                              <span className="text-sm tabular-nums">{soilData.nutrients.phosphorus} ppm</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-farm-secondary h-2.5 rounded-full" 
-                                style={{ width: `${(soilData.nutrients.phosphorus / 100) * 100}%` }}
+                                style={{ width: `${Math.min((soilData.nutrients.phosphorus / 100) * 100, 100)}%` }}
                               ></div>
                             </div>
                           </div>
@@ -348,12 +348,12 @@ const SoilData = () => {
                           <div>
                             <div className="flex justify-between mb-1">
                               <span className="text-sm font-medium">Potassium (K)</span>
-                              <span className="text-sm">{soilData.nutrients.potassium} ppm</span>
+                              <span className="text-sm tabular-nums">{soilData.nutrients.potassium} ppm</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-farm-accent h-2.5 rounded-full" 
-                                style={{ width: `${(soilData.nutrients.potassium / 100) * 100}%` }}
+                                style={{ width: `${Math.min((soilData.nutrients.potassium / 100) * 100, 100)}%` }}
                               ></div>
                             </div>
                           </div>
@@ -361,12 +361,12 @@ const SoilData = () => {
                           <div>
                             <div className="flex justify-between mb-1">
                               <span className="text-sm font-medium">Calcium (Ca)</span>
-                              <span className="text-sm">{soilData.nutrients.calcium} ppm</span>
+                              <span className="text-sm tabular-nums">{soilData.nutrients.calcium} ppm</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-blue-400 h-2.5 rounded-full" 
-                                style={{ width: `${(soilData.nutrients.calcium / 2000) * 100}%` }}
+                                style={{ width: `${Math.min((soilData.nutrients.calcium / 2000) * 100, 100)}%` }}
                               ></div>
                             </div>
                           </div>
@@ -374,12 +374,12 @@ const SoilData = () => {
                           <div>
                             <div className="flex justify-between mb-1">
                               <span className="text-sm font-medium">Magnesium (Mg)</span>
-                              <span className="text-sm">{soilData.nutrients.magnesium} ppm</span>
+                              <span className="text-sm tabular-nums">{soilData.nutrients.magnesium} ppm</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-purple-400 h-2.5 rounded-full" 
-                                style={{ width: `${(soilData.nutrients.magnesium / 400) * 100}%` }}
+                                style={{ width: `${Math.min((soilData.nutrients.magnesium / 400) * 100, 100)}%` }}
                               ></div>
                             </div>
                           </div>
@@ -387,12 +387,12 @@ const SoilData = () => {
                           <div>
                             <div className="flex justify-between mb-1">
                               <span className="text-sm font-medium">Sulfur (S)</span>
-                              <span className="text-sm">{soilData.nutrients.sulfur} ppm</span>
+                              <span className="text-sm tabular-nums">{soilData.nutrients.sulfur} ppm</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div 
                                 className="bg-orange-400 h-2.5 rounded-full" 
-                                style={{ width: `${(soilData.nutrients.sulfur / 30) * 100}%` }}
+                                style={{ width: `${Math.min((soilData.nutrients.sulfur / 30) * 100, 100)}%` }}
                               ></div>
                             </div>
                           </div>
