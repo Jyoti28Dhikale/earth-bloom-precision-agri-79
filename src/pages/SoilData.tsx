@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { LocationInput } from "@/components/location/LocationInput";
+import { downloadReport } from "@/utils/reportGenerator";
+import { Save } from "lucide-react";
 
 const SoilData = () => {
   const [location, setLocation] = useState("");
@@ -72,6 +74,14 @@ const SoilData = () => {
         description: `Analysis complete for ${location}`,
       });
     }, 1500);
+  };
+
+  const handleDownloadReport = () => {
+    downloadReport(soilData);
+    toast({
+      title: "Report Downloaded",
+      description: "Your soil analysis report has been downloaded.",
+    });
   };
 
   return (
@@ -272,7 +282,14 @@ const SoilData = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
-                    <Button variant="outline">Download Report</Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleDownloadReport}
+                      className="flex items-center gap-2"
+                    >
+                      <Save className="h-4 w-4" />
+                      Download Report
+                    </Button>
                     <Button className="bg-farm-primary hover:bg-farm-dark">
                       Get Recommendations
                     </Button>
