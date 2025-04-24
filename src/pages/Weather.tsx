@@ -1,209 +1,80 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Navigation } from "lucide-react";
-import { LoadScript, Autocomplete } from '@react-google-maps/api';
+import { LocationInput } from "@/components/location/LocationInput";
+import { Button } from "@/components/ui/button";
 
-// Google Maps API key - this is a frontend key, safe to expose
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
-
-const libraries: ("places")[] = ["places"];
+// Mock data for demonstration
+const weatherData = {
+  location: "Midwest Region, USA",
+  current: {
+    temperature: 22,
+    condition: "Partly Cloudy",
+    humidity: 65,
+    wind: {
+      speed: 12,
+      direction: "NW"
+    },
+    precipitation: 0,
+    uv: 5
+  },
+  forecast: [
+    { day: "Today", high: 24, low: 18, condition: "Partly Cloudy", precipitation: 10 },
+    { day: "Tomorrow", high: 26, low: 19, condition: "Sunny", precipitation: 0 },
+    { day: "Wednesday", high: 25, low: 17, condition: "Partly Cloudy", precipitation: 20 },
+    { day: "Thursday", high: 22, low: 16, condition: "Rain Showers", precipitation: 60 },
+    { day: "Friday", high: 21, low: 15, condition: "Rain", precipitation: 80 },
+    { day: "Saturday", high: 20, low: 14, condition: "Rain Showers", precipitation: 40 },
+    { day: "Sunday", high: 23, low: 15, condition: "Partly Cloudy", precipitation: 20 }
+  ],
+  seasonal: {
+    temperature: {
+      spring: { avg: 15, min: 5, max: 25 },
+      summer: { avg: 28, min: 18, max: 38 },
+      fall: { avg: 18, min: 8, max: 28 },
+      winter: { avg: 2, min: -8, max: 12 }
+    },
+    rainfall: {
+      spring: 250,
+      summer: 350,
+      fall: 200,
+      winter: 150
+    }
+  },
+  agriculturalMetrics: {
+    growingDegreeDays: 1250,
+    chillHours: 850,
+    frostRiskDays: 5,
+    soilTemperature: 18
+  }
+};
 
 const Weather = () => {
-  const [location, setLocation] = useState("");
   const [displayLocation, setDisplayLocation] = useState("");
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
   const [usingCurrentLocation, setUsingCurrentLocation] = useState(false);
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   const { toast } = useToast();
 
-  // Mock data for demonstration
-  const weatherData = {
-    location: "Midwest Region, USA",
-    current: {
-      temperature: 22,
-      condition: "Partly Cloudy",
-      humidity: 65,
-      wind: {
-        speed: 12,
-        direction: "NW"
-      },
-      precipitation: 0,
-      uv: 5
-    },
-    forecast: [
-      { day: "Today", high: 24, low: 18, condition: "Partly Cloudy", precipitation: 10 },
-      { day: "Tomorrow", high: 26, low: 19, condition: "Sunny", precipitation: 0 },
-      { day: "Wednesday", high: 25, low: 17, condition: "Partly Cloudy", precipitation: 20 },
-      { day: "Thursday", high: 22, low: 16, condition: "Rain Showers", precipitation: 60 },
-      { day: "Friday", high: 21, low: 15, condition: "Rain", precipitation: 80 },
-      { day: "Saturday", high: 20, low: 14, condition: "Rain Showers", precipitation: 40 },
-      { day: "Sunday", high: 23, low: 15, condition: "Partly Cloudy", precipitation: 20 }
-    ],
-    seasonal: {
-      temperature: {
-        spring: { avg: 15, min: 5, max: 25 },
-        summer: { avg: 28, min: 18, max: 38 },
-        fall: { avg: 18, min: 8, max: 28 },
-        winter: { avg: 2, min: -8, max: 12 }
-      },
-      rainfall: {
-        spring: 250,
-        summer: 350,
-        fall: 200,
-        winter: 150
-      }
-    },
-    agriculturalMetrics: {
-      growingDegreeDays: 1250,
-      chillHours: 850,
-      frostRiskDays: 5,
-      soilTemperature: 18
-    }
+  const handleLocationSelect = (location: string, coords: {lat: number, lng: number}) => {
+    setDisplayLocation(location);
+    setCoordinates(coords);
+    setUsingCurrentLocation(false);
+    handleSearch();
   };
 
-  useEffect(() => {
-    handleGetCurrentLocation();
-  }, []);
-
-  const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Geolocation Not Supported",
-        description: "Your browser does not support geolocation services.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsLoading(true);
+  const handleCurrentLocation = (coords: {lat: number, lng: number}, location: string) => {
+    setCoordinates(coords);
+    setDisplayLocation(location);
     setUsingCurrentLocation(true);
-    
-    navigator.geolocation.getCurrentPosition(
-      // Success callback
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setCoordinates({ lat: latitude, lng: longitude });
-        setLocation(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`);
-        
-        // Reverse geocode the coordinates to get state and country
-        const geocoder = new google.maps.Geocoder();
-        geocoder.geocode(
-          { location: { lat: latitude, lng: longitude } },
-          (results, status) => {
-            if (status === "OK" && results && results[0]) {
-              const addressComponents = results[0].address_components;
-              let state = "";
-              let country = "";
-              
-              for (const component of addressComponents) {
-                if (component.types.includes("administrative_area_level_1")) {
-                  state = component.long_name;
-                }
-                if (component.types.includes("country")) {
-                  country = component.long_name;
-                }
-              }
-              
-              setDisplayLocation(`${state}, ${country}`);
-            } else {
-              setDisplayLocation("Current Location");
-            }
-            
-            // Now fetch weather data with coordinates
-            handleSearch(new Event('submit') as any);
-          }
-        );
-      },
-      // Error callback
-      (error) => {
-        setIsLoading(false);
-        setUsingCurrentLocation(false);
-        let errorMessage = "Failed to get your location.";
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location access was denied. Please enable location permissions in your browser.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information is unavailable.";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "The request to get your location timed out.";
-            break;
-        }
-        
-        toast({
-          title: "Location Error",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      },
-      { 
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
+    handleSearch();
   };
 
-  const onLoad = (autocomplete: google.maps.places.Autocomplete) => {
-    const bounds = new google.maps.LatLngBounds(
-      new google.maps.LatLng(6.7559, 68.1862),  // Southwest corner of India
-      new google.maps.LatLng(35.6745, 97.3956)  // Northeast corner of India
-    );
-    
-    autocomplete.setBounds(bounds);
-    autocomplete.setOptions({
-      componentRestrictions: { country: "in" },
-      types: ["geocode", "establishment"],
-      strictBounds: true
-    });
-    
-    setAutocomplete(autocomplete);
-  };
-
-  const onPlaceChanged = () => {
-    if (autocomplete) {
-      const place = autocomplete.getPlace();
-      
-      if (place.geometry && place.geometry.location) {
-        setCoordinates({
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng()
-        });
-        
-        // Update both location and display location
-        setLocation(place.formatted_address || "");
-        setDisplayLocation(place.name || place.formatted_address || "");
-        setUsingCurrentLocation(false);
-        
-        // Trigger search after place selection
-        handleSearch(new Event('submit') as any);
-      }
-    }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = () => {
     setIsLoading(true);
-    
-    if (!location.trim()) {
-      toast({
-        title: "Location required",
-        description: "Please enter a location to search",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
     
     // Simulate API call delay
     setTimeout(() => {
@@ -240,7 +111,7 @@ const Weather = () => {
             <path d="m4.93 4.93 1.41 1.41"></path>
             <path d="m17.66 17.66 1.41 1.41"></path>
             <path d="M2 12h2"></path>
-            <path d="M6.34 17.66l-1.41 1.41"></path>
+            <path d="m6.34 17.66l-1.41 1.41"></path>
             <path d="M22 12h-2"></path>
             <path d="M19.07 4.93l-1.41 1.41"></path>
             <path d="M10.26 5.77A7 7 0 0 0 5.76 10.26"></path>
@@ -298,52 +169,13 @@ const Weather = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSearch} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2 md:col-span-3">
-                      <Label htmlFor="location">Location</Label>
-                      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={libraries}>
-                        <Autocomplete
-                          onLoad={onLoad}
-                          onPlaceChanged={onPlaceChanged}
-                        >
-                          <Input
-                            id="location"
-                            placeholder="Enter city, region, or location in India"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            disabled={usingCurrentLocation}
-                          />
-                        </Autocomplete>
-                      </LoadScript>
-                    </div>
-                    <div className="flex items-end">
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-farm-primary hover:bg-farm-dark"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Searching..." : "Check Weather"}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-center">
-                    <div className="h-px bg-border flex-1" />
-                    <span className="px-3 text-xs text-muted-foreground">OR</span>
-                    <div className="h-px bg-border flex-1" />
-                  </div>
-                  
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={handleGetCurrentLocation}
-                    disabled={isLoading}
-                  >
-                    <Navigation className="h-4 w-4" />
-                    {isLoading && usingCurrentLocation ? "Getting Location..." : "Use My Current Location"}
-                  </Button>
+                <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="space-y-4">
+                  <LocationInput
+                    onLocationSelect={handleLocationSelect}
+                    onCurrentLocation={handleCurrentLocation}
+                    isLoading={isLoading}
+                    usingCurrentLocation={usingCurrentLocation}
+                  />
                 </form>
               </CardContent>
             </Card>

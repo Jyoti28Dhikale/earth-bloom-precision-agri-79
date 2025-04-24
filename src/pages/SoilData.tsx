@@ -1,12 +1,9 @@
-
 import { Layout } from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Navigation } from "lucide-react";
+import { LocationInput } from "@/components/location/LocationInput";
 
 const SoilData = () => {
   const [location, setLocation] = useState("");
@@ -41,137 +38,38 @@ const SoilData = () => {
   // Try to get location when component mounts
   useEffect(() => {
     // Auto-prompt for location when the page loads
-    handleGetCurrentLocation();
+    // handleGetCurrentLocation();
   }, []);
-  
-  const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Geolocation Not Supported",
-        description: "Your browser does not support geolocation services.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    setUsingCurrentLocation(true);
-    
-    navigator.geolocation.getCurrentPosition(
-      // Success callback
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setCoordinates({ lat: latitude, lng: longitude });
-        setLocation(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`);
-        
-        // Now fetch soil data with coordinates
-        fetchSoilDataByCoordinates(latitude, longitude);
-      },
-      // Error callback
-      (error) => {
-        setIsLoading(false);
-        setUsingCurrentLocation(false);
-        let errorMessage = "Failed to get your location.";
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location access was denied. Please enable location permissions in your browser.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information is unavailable.";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "The request to get your location timed out.";
-            break;
-        }
-        
-        toast({
-          title: "Location Error",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      },
-      { 
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
-  };
-  
-  // This would typically call an API, but we're simulating it
-  const fetchSoilDataByCoordinates = (latitude: number, longitude: number) => {
-    // Simulate API call with a delay
-    setTimeout(() => {
-      // Generate some semi-random data based on coordinates
-      // This creates variation based on location
-      const latSeed = Math.abs(Math.sin(latitude)) * 10;
-      const lngSeed = Math.abs(Math.cos(longitude)) * 10;
-      const randomSeed = (latSeed + lngSeed) / 2;
-      
-      // Get location name from coordinates (mock)
-      const locationName = getLocationNameFromCoordinates(latitude, longitude);
-      
-      // Update soil data with "location-specific" information
-      setSoilData({
-        location: locationName,
-        soilType: getSoilType(randomSeed),
-        ph: 6.0 + (randomSeed % 2),
-        texture: {
-          sand: 30 + Math.floor(randomSeed * 2) % 20,
-          silt: 30 + Math.floor(randomSeed * 3) % 20,
-          clay: 20 + Math.floor(randomSeed * 4) % 10
-        },
-        organicMatter: 2.5 + (randomSeed % 2),
-        nutrients: {
-          nitrogen: 25 + Math.floor(randomSeed * 20),
-          phosphorus: 30 + Math.floor(randomSeed * 25),
-          potassium: 20 + Math.floor(randomSeed * 15),
-          calcium: 900 + Math.floor(randomSeed * 500),
-          magnesium: 180 + Math.floor(randomSeed * 100),
-          sulfur: 10 + Math.floor(randomSeed * 10)
-        },
-        cec: 10 + (randomSeed % 5)
-      });
-      
-      setIsLoading(false);
-      setIsSearched(true);
-      
-      toast({
-        title: "Soil Data Retrieved",
-        description: `Analysis complete for location at ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-      });
-    }, 2000);
-  };
-  
-  // Mock function to get location name
-  const getLocationNameFromCoordinates = (lat: number, lng: number) => {
-    // In a real application, this would use reverse geocoding
-    // For now, return a generic location name
-    return `Location at ${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
-  };
-  
-  // Get soil type based on random seed
-  const getSoilType = (seed: number) => {
-    const soilTypes = ["Clay", "Sandy", "Silt", "Loam", "Clay Loam", "Sandy Loam", "Peat"];
-    const index = Math.floor(seed) % soilTypes.length;
-    return soilTypes[index];
-  };
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+
+  const handleLocationSelect = (location: string, coords: {lat: number, lng: number}) => {
+    setLocation(location);
+    setCoordinates(coords);
     setUsingCurrentLocation(false);
-    
+    handleSearch();
+  };
+
+  const handleCurrentLocation = (coords: {lat: number, lng: number}, location: string) => {
+    setCoordinates(coords);
+    setLocation(location);
+    setUsingCurrentLocation(true);
+    handleSearch();
+  };
+
+  const handleSearch = () => {
+    setIsLoading(true);
+
     // Simulate API call delay
     setTimeout(() => {
       setIsLoading(false);
       setIsSearched(true);
-      
-      // Update with some default soil data
-      setSoilData({
-        ...soilData,
+      setSoilData(prevData => ({
+        ...prevData,
         location: location
+      }));
+      
+      toast({
+        title: "Soil Data Retrieved",
+        description: `Analysis complete for ${location}`,
       });
     }, 1500);
   };
@@ -195,50 +93,17 @@ const SoilData = () => {
               <CardHeader>
                 <CardTitle>Find Your Soil Data</CardTitle>
                 <CardDescription>
-                  Enter a location or farm coordinates to retrieve soil information
+                  Enter a location in India to retrieve soil information
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSearch} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2 md:col-span-3">
-                      <Label htmlFor="location">Farm Location</Label>
-                      <Input
-                        id="location"
-                        placeholder="Enter address, city, or coordinates"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        required={!usingCurrentLocation}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    <div className="flex items-end">
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-farm-primary hover:bg-farm-dark"
-                        disabled={isLoading || usingCurrentLocation}
-                      >
-                        {isLoading && !usingCurrentLocation ? "Searching..." : "Search"}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-center">
-                    <div className="h-px bg-border flex-1" />
-                    <span className="px-3 text-xs text-muted-foreground">OR</span>
-                    <div className="h-px bg-border flex-1" />
-                  </div>
-                  
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={handleGetCurrentLocation}
-                    disabled={isLoading}
-                  >
-                    <Navigation className="h-4 w-4" />
-                    {isLoading && usingCurrentLocation ? "Getting Location..." : "Use My Current Location"}
-                  </Button>
+                <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="space-y-4">
+                  <LocationInput
+                    onLocationSelect={handleLocationSelect}
+                    onCurrentLocation={handleCurrentLocation}
+                    isLoading={isLoading}
+                    usingCurrentLocation={usingCurrentLocation}
+                  />
                 </form>
               </CardContent>
             </Card>
