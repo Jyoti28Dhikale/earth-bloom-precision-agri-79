@@ -16,6 +16,7 @@ const libraries: ("places")[] = ["places"];
 
 const Weather = () => {
   const [location, setLocation] = useState("");
+  const [displayLocation, setDisplayLocation] = useState("");
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
@@ -91,6 +92,7 @@ const Weather = () => {
         const { latitude, longitude } = position.coords;
         setCoordinates({ lat: latitude, lng: longitude });
         setLocation(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`);
+        setDisplayLocation("Current Location"); // Set a default display for current location
         
         // Now fetch weather data with coordinates
         handleSearch(new Event('submit') as any);
@@ -152,8 +154,14 @@ const Weather = () => {
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng()
         });
+        
+        // Update both location and display location
         setLocation(place.formatted_address || "");
+        setDisplayLocation(place.name || place.formatted_address || "");
         setUsingCurrentLocation(false);
+        
+        // Trigger search after place selection
+        handleSearch(new Event('submit') as any);
       }
     }
   };
@@ -178,7 +186,7 @@ const Weather = () => {
       setIsSearched(true);
       toast({
         title: "Weather Data Retrieved",
-        description: `Weather information for ${location} has been loaded`,
+        description: `Weather information for ${displayLocation} has been loaded`,
       });
     }, 1500);
   };
@@ -333,7 +341,7 @@ const Weather = () => {
                   <TabsContent value="current" className="animate-fade-in">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Current Weather for {weatherData.location}</CardTitle>
+                        <CardTitle>Current Weather for {displayLocation}</CardTitle>
                         <CardDescription>
                           Last updated: {new Date().toLocaleString()}
                         </CardDescription>
@@ -412,7 +420,7 @@ const Weather = () => {
                   <TabsContent value="forecast" className="animate-fade-in">
                     <Card>
                       <CardHeader>
-                        <CardTitle>7-Day Forecast for {weatherData.location}</CardTitle>
+                        <CardTitle>7-Day Forecast for {displayLocation}</CardTitle>
                         <CardDescription>
                           Plan your farming activities with our weekly forecast
                         </CardDescription>
@@ -494,7 +502,7 @@ const Weather = () => {
                   <TabsContent value="seasonal" className="animate-fade-in">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Seasonal Climate Data for {weatherData.location}</CardTitle>
+                        <CardTitle>Seasonal Climate Data for {displayLocation}</CardTitle>
                         <CardDescription>
                           Plan your long-term farming strategy with seasonal patterns
                         </CardDescription>
