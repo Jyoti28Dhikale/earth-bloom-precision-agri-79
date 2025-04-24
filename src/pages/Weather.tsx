@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "lucide-react";
+import { LoadScript, Autocomplete } from '@react-google-maps/api';
+
+// Google Maps API key - this is a frontend key, safe to expose
+const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+
+const libraries: ("places")[] = ["places"];
 
 const Weather = () => {
   const [location, setLocation] = useState("");
@@ -15,6 +20,7 @@ const Weather = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
   const [usingCurrentLocation, setUsingCurrentLocation] = useState(false);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   const { toast } = useToast();
 
   // Mock data for demonstration
@@ -121,6 +127,37 @@ const Weather = () => {
     );
   };
 
+  const onLoad = (autocomplete: google.maps.places.Autocomplete) => {
+    const bounds = new google.maps.LatLngBounds(
+      new google.maps.LatLng(6.7559, 68.1862),  // Southwest corner of India
+      new google.maps.LatLng(35.6745, 97.3956)  // Northeast corner of India
+    );
+    
+    autocomplete.setBounds(bounds);
+    autocomplete.setOptions({
+      componentRestrictions: { country: "in" },
+      types: ["geocode", "establishment"],
+      strictBounds: true
+    });
+    
+    setAutocomplete(autocomplete);
+  };
+
+  const onPlaceChanged = () => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      
+      if (place.geometry && place.geometry.location) {
+        setCoordinates({
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        });
+        setLocation(place.formatted_address || "");
+        setUsingCurrentLocation(false);
+      }
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -224,7 +261,7 @@ const Weather = () => {
               <CardHeader>
                 <CardTitle>Check Weather Conditions</CardTitle>
                 <CardDescription>
-                  Enter a location to get current weather and forecast information
+                  Enter a location in India to get current weather and forecast information
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -232,13 +269,20 @@ const Weather = () => {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-2 md:col-span-3">
                       <Label htmlFor="location">Location</Label>
-                      <Input
-                        id="location"
-                        placeholder="Enter city, region, or farm location"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        disabled={usingCurrentLocation}
-                      />
+                      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={libraries}>
+                        <Autocomplete
+                          onLoad={onLoad}
+                          onPlaceChanged={onPlaceChanged}
+                        >
+                          <Input
+                            id="location"
+                            placeholder="Enter city, region, or location in India"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            disabled={usingCurrentLocation}
+                          />
+                        </Autocomplete>
+                      </LoadScript>
                     </div>
                     <div className="flex items-end">
                       <Button 
