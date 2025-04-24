@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ const SoilData = () => {
   const [location, setLocation] = useState("");
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [coordinates, setCoordinates<{lat: number, lng: number} | null>({lat: 0, lng: 0});
+  const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>({lat: 0, lng: 0});
   const [usingCurrentLocation, setUsingCurrentLocation] = useState(false);
   const { toast } = useToast();
 

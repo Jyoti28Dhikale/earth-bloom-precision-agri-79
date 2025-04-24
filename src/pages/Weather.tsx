@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ const Weather = () => {
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
-  const [usingCurrentLocation, setUsingCurrentLocation] useState(false);
+  const [usingCurrentLocation, setUsingCurrentLocation] = useState(false);
   const { toast } = useToast();
 
   // Mock data for demonstration
