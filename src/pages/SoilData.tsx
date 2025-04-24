@@ -6,8 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import { LocationInput } from "@/components/location/LocationInput";
 import { downloadReport } from "@/utils/reportGenerator";
 import { Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const SoilData = () => {
+  const navigate = useNavigate();
   const [location, setLocation] = useState("");
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,6 +84,10 @@ const SoilData = () => {
       title: "Report Downloaded",
       description: "Your soil analysis report has been downloaded.",
     });
+  };
+
+  const handleViewResults = () => {
+    navigate('/results', { state: { soilData } });
   };
 
   return (
@@ -290,9 +296,14 @@ const SoilData = () => {
                       <Save className="h-4 w-4" />
                       Download Report
                     </Button>
-                    <Button className="bg-farm-primary hover:bg-farm-dark">
-                      Get Recommendations
-                    </Button>
+                    <div className="space-x-2">
+                      <Button 
+                        className="bg-farm-primary hover:bg-farm-dark"
+                        onClick={handleViewResults}
+                      >
+                        View Detailed Results
+                      </Button>
+                    </div>
                   </CardFooter>
                 </Card>
                 

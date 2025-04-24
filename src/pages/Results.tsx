@@ -1,97 +1,21 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
-
-// Mock data for demonstration
-const mockResultData = {
-  location: "Midwest Region, USA",
-  soilData: {
-    ph: 6.8,
-    texture: "Loamy",
-    nutrients: {
-      nitrogen: 35,
-      phosphorus: 42,
-      potassium: 28,
-      organic: 3.5
-    }
-  },
-  weatherData: {
-    temperature: {
-      avg: 22,
-      min: 10,
-      max: 32
-    },
-    rainfall: 850,
-    humidity: 65,
-    windSpeed: 12
-  },
-  recommendations: [
-    {
-      id: 1,
-      name: "Soybean",
-      image: "https://images.unsplash.com/photo-1601459427108-47e20d579a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-      suitability: 95,
-      details: {
-        crop_name: "Soybean",
-        crop_info: "A legume species native to East Asia, widely grown for its edible bean, which has numerous uses.",
-        growing_info: {
-          growing_season: "Late spring to late summer",
-          water_needs: "Medium (requires consistent moisture, especially during flowering and pod development)",
-          soil_preference: "Loamy, well-drained with pH 6.0-7.5",
-          harvest_time: "90-120 days after planting"
-        },
-        expected_yield: {
-          in_tons_per_acre: 3.2
-        }
-      }
-    },
-    {
-      id: 2,
-      name: "Corn",
-      image: "https://images.unsplash.com/photo-1543674892-7d64d45b2140?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-      suitability: 88,
-      details: {
-        crop_name: "Corn",
-        crop_info: "A cereal grain first domesticated by indigenous peoples in southern Mexico, now one of the most widely grown crops globally.",
-        growing_info: {
-          growing_season: "Late spring to mid-autumn",
-          water_needs: "High (requires consistent moisture, especially during silking and ear development)",
-          soil_preference: "Well-drained loam with pH 5.8-7.0",
-          harvest_time: "60-100 days after planting depending on variety"
-        },
-        expected_yield: {
-          in_tons_per_acre: 4.5
-        }
-      }
-    },
-    {
-      id: 3,
-      name: "Winter Wheat",
-      image: "https://images.unsplash.com/photo-1574323347407-f5e1c1bc9661?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-      suitability: 82,
-      details: {
-        crop_name: "Winter Wheat",
-        crop_info: "A type of wheat planted in autumn to germinate and develop into young plants that remain in vegetative phase during winter.",
-        growing_info: {
-          growing_season: "Planted in fall, harvested in early summer",
-          water_needs: "Moderate (tolerates drier conditions better than other wheat varieties)",
-          soil_preference: "Well-drained loam with pH 5.5-7.5",
-          harvest_time: "July to August (approximately 8 months after planting)"
-        },
-        expected_yield: {
-          in_tons_per_acre: 3.8
-        }
-      }
-    }
-  ]
-};
+import { useLocation, Navigate } from "react-router-dom";
 
 const Results = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("crops");
+
+  // Redirect if no soil data is present
+  if (!location.state?.soilData) {
+    return <Navigate to="/soil-data" replace />;
+  }
+
+  const soilData = location.state.soilData;
 
   const handleDownloadReport = () => {
     // In a real app, this would generate and download a PDF
@@ -107,8 +31,7 @@ const Results = () => {
               Your Farming Recommendations
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Based on your specific soil conditions, location, and farming history,
-              here are our AI-powered recommendations for optimal crop selection
+              Based on soil analysis for {soilData.location}
             </p>
           </div>
 
@@ -209,7 +132,7 @@ const Results = () => {
             <TabsContent value="soil" className="animate-fade-in">
               <Card>
                 <CardHeader>
-                  <CardTitle>Soil Analysis for {mockResultData.location}</CardTitle>
+                  <CardTitle>Soil Analysis for {soilData.location}</CardTitle>
                   <CardDescription>
                     Understanding your soil composition helps optimize planting decisions
                   </CardDescription>
@@ -326,7 +249,7 @@ const Results = () => {
             <TabsContent value="weather" className="animate-fade-in">
               <Card>
                 <CardHeader>
-                  <CardTitle>Weather Conditions for {mockResultData.location}</CardTitle>
+                  <CardTitle>Weather Conditions for {soilData.location}</CardTitle>
                   <CardDescription>
                     Climate analysis and forecast for optimal crop planning
                   </CardDescription>
