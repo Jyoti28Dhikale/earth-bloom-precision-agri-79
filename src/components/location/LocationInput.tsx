@@ -1,10 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface LocationInputProps {
   onLocationSelect: (location: string, coordinates: { lat: number, lng: number }) => void;
@@ -22,6 +21,9 @@ export const LocationInput = ({
   placeholder = "Enter city, region, or location in India"
 }: LocationInputProps) => {
   const [location, setLocation] = useState("");
+  const [suggestions, setSuggestions] = useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const handleGetCurrentLocation = () => {
@@ -102,72 +104,85 @@ export const LocationInput = ({
     );
   };
 
-  const handleManualSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!location.trim()) {
-      toast({
-        title: "Location Required",
-        description: "Please enter a location to search.",
-        variant: "destructive"
-      });
+  const handleInputChange = async (value: string) => {
+    setLocation(value);
+    if (value.length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
-    
-    // Use OpenStreetMap Nominatim API for geocoding
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}${placeholder.includes("India") ? "&countrycodes=in" : ""}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data && data.length > 0) {
-          const result = data[0];
-          const coordinates = {
-            lat: parseFloat(result.lat),
-            lng: parseFloat(result.lon)
-          };
-          
-          const displayName = result.display_name || location;
-          onLocationSelect(displayName, coordinates);
-          
-          toast({
-            title: "Location Found",
-            description: `Found location: ${displayName}`
-          });
-        } else {
-          toast({
-            title: "Location Not Found",
-            description: "Could not find the specified location. Please try a different search term.",
-            variant: "destructive"
-          });
-        }
-      })
-      .catch(error => {
-        console.error("Error geocoding location:", error);
-        toast({
-          title: "Search Error",
-          description: "An error occurred while searching for the location. Please try again.",
-          variant: "destructive"
-        });
-      });
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          value
+        )}&countrycodes=in&limit=5`
+      );
+      const data = await response.json();
+      setSuggestions(data);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      setSuggestions([]);
+    }
   };
+
+  const handleSuggestionClick = (suggestion: { display_name: string; lat: string; lon: string }) => {
+    setLocation(suggestion.display_name);
+    setShowSuggestions(false);
+    onLocationSelect(suggestion.display_name, {
+      lat: parseFloat(suggestion.lat),
+      lng: parseFloat(suggestion.lon)
+    });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="space-y-2 md:col-span-3">
+        <div className="space-y-2 md:col-span-3 relative">
           <Label htmlFor="location">Location</Label>
           <Input
             id="location"
             placeholder={placeholder}
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             disabled={usingCurrentLocation}
+            autoComplete="off"
           />
+          {showSuggestions && suggestions.length > 0 && (
+            <div
+              ref={suggestionsRef}
+              className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto"
+            >
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-sm"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion.display_name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex items-end">
           <Button 
             type="button" 
-            onClick={handleManualSearch}
+            onClick={() => handleSuggestionClick(suggestions[0])}
             className="w-full bg-farm-primary hover:bg-farm-dark"
-            disabled={isLoading || usingCurrentLocation}
+            disabled={isLoading || usingCurrentLocation || suggestions.length === 0}
           >
             {isLoading && !usingCurrentLocation ? "Searching..." : "Search"}
           </Button>
