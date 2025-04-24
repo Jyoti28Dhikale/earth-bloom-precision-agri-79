@@ -92,10 +92,35 @@ const Weather = () => {
         const { latitude, longitude } = position.coords;
         setCoordinates({ lat: latitude, lng: longitude });
         setLocation(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`);
-        setDisplayLocation("Current Location"); // Set a default display for current location
         
-        // Now fetch weather data with coordinates
-        handleSearch(new Event('submit') as any);
+        // Reverse geocode the coordinates to get state and country
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode(
+          { location: { lat: latitude, lng: longitude } },
+          (results, status) => {
+            if (status === "OK" && results && results[0]) {
+              const addressComponents = results[0].address_components;
+              let state = "";
+              let country = "";
+              
+              for (const component of addressComponents) {
+                if (component.types.includes("administrative_area_level_1")) {
+                  state = component.long_name;
+                }
+                if (component.types.includes("country")) {
+                  country = component.long_name;
+                }
+              }
+              
+              setDisplayLocation(`${state}, ${country}`);
+            } else {
+              setDisplayLocation("Current Location");
+            }
+            
+            // Now fetch weather data with coordinates
+            handleSearch(new Event('submit') as any);
+          }
+        );
       },
       // Error callback
       (error) => {
