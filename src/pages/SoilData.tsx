@@ -1,18 +1,17 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "lucide-react";
 
 const SoilData = () => {
   const [location, setLocation] = useState("");
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
+  const [coordinates, setCoordinates<{lat: number, lng: number} | null>({lat: 0, lng: 0});
   const [usingCurrentLocation, setUsingCurrentLocation] = useState(false);
   const { toast } = useToast();
 

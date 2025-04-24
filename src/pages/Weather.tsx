@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Navigation } from "lucide-react";
 
 const Weather = () => {
   const [location, setLocation] = useState("");
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
+  const [usingCurrentLocation, setUsingCurrentLocation] useState(false);
   const { toast } = useToast();
 
   // Mock data for demonstration
@@ -57,6 +59,65 @@ const Weather = () => {
       frostRiskDays: 5,
       soilTemperature: 18
     }
+  };
+
+  useEffect(() => {
+    handleGetCurrentLocation();
+  }, []);
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Geolocation Not Supported",
+        description: "Your browser does not support geolocation services.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    setUsingCurrentLocation(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      // Success callback
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCoordinates({ lat: latitude, lng: longitude });
+        setLocation(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`);
+        
+        // Now fetch weather data with coordinates
+        handleSearch(new Event('submit') as any);
+      },
+      // Error callback
+      (error) => {
+        setIsLoading(false);
+        setUsingCurrentLocation(false);
+        let errorMessage = "Failed to get your location.";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access was denied. Please enable location permissions in your browser.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "The request to get your location timed out.";
+            break;
+        }
+        
+        toast({
+          title: "Location Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -175,6 +236,7 @@ const Weather = () => {
                         placeholder="Enter city, region, or farm location"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
+                        disabled={usingCurrentLocation}
                       />
                     </div>
                     <div className="flex items-end">
@@ -187,6 +249,23 @@ const Weather = () => {
                       </Button>
                     </div>
                   </div>
+                  
+                  <div className="flex items-center justify-center">
+                    <div className="h-px bg-border flex-1" />
+                    <span className="px-3 text-xs text-muted-foreground">OR</span>
+                    <div className="h-px bg-border flex-1" />
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={handleGetCurrentLocation}
+                    disabled={isLoading}
+                  >
+                    <Navigation className="h-4 w-4" />
+                    {isLoading && usingCurrentLocation ? "Getting Location..." : "Use My Current Location"}
+                  </Button>
                 </form>
               </CardContent>
             </Card>
